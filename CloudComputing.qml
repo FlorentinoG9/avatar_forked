@@ -22,13 +22,16 @@ Rectangle {
     ScrollView {
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.9, 600)
-        height: Math.min(parent.height * 0.9, contentHeight)
+        height: Math.min(parent.height * 0.9, 500)
         clip: true
 
-        ColumnLayout {
-            id: contentLayout
+        Rectangle {
             width: parent.width
-            spacing: 10
+            implicitHeight: contentLayout.implicitHeight + 20
+            color: "#5a6b7d"
+            border.color: "#CCCCCC"
+            border.width: 1
+            radius: 4
 
             Form_Input {
                 id: hostInput
