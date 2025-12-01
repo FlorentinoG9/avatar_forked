@@ -1,19 +1,23 @@
 import QtQuick.Dialogs
 import Qt.labs.platform
 import QtQuick 6.5
-import QtQuick.Controls 6.4
+import QtQuick.Controls 6.5
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
-import QtQuick3D 6.7
+import "GUI_Components"
 
 // Transfer Data is renamed to Cloud Computing
 Rectangle {
+    id: root
     color: "#718399"
 
     signal saveConfig(string host, string username, string privateKeyDir, string targetDir, bool ignoreHostKey, string sourceDir, string configPath)
     signal loadConfig(string configPath)
     signal clearConfig()
     signal upload(string host, string username, string privateKeyDir, string password, bool ignoreHostKey, string sourceDir, string targetDir)
+
+    property bool isSavingConfig: false
+
 
     ScrollView {
         anchors.centerIn: parent
@@ -29,345 +33,158 @@ Rectangle {
             border.width: 1
             radius: 4
 
-            ColumnLayout {
-                id: contentLayout
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
+            Form_Input {
+                id: hostInput
+                labelText: "Target IP"
+                objectName: "hostInput"
+                Layout.fillWidth: true
+                text: ""
+                placeholderText: "192.168.1.100"
+            }
 
-                Label {
-                    text: "Target IP"
+            Form_Input {
+                id: usernameInput
+                labelText: "Target Username"
+                objectName:"usernameInput"
+                Layout.fillWidth: true
+                text: ""
+                placeholderText: "username"
+            }
+
+            Form_Input {
+                id: passwordInput
+                labelText: "Target Password"
+                objectName:"passwordInput"
+                Layout.fillWidth: true
+                echoMode: TextInput.Password
+                text: ""
+                placeholderText: "Enter Password"
+            }
+
+            Form_File_Input {
+                id: privateKeyDirInput
+                labelText: "Private Key Directory:"
+                dialogTitle: "Select Private Key Directory"
+                selectDirectory: true
+                objectName: "privateKeyDirInput"
+                Layout.fillWidth: true
+                text: ""
+                placeholderText: "/home/{username}/.ssh"
+            }
+
+            CheckBox {
+                id: ignoreHostKeyCheckbox
+                objectName: "ignoreHostKeyCheckbox"
+                text: "Ignore Host Key"
+                font.bold: true
+                checked: true
+                contentItem: Text {
+                    text: ignoreHostKeyCheckbox.text
+                    font.bold: true
                     color: "white"
-                    font.bold: true
+                    leftPadding: ignoreHostKeyCheckbox.indicator.width + ignoreHostKeyCheckbox.spacing
                 }
+            }
 
-                TextField {
-                    id: hostInput
-                    objectName: "hostInput"
-                    Layout.fillWidth: true
-                    text: ""
+            Form_File_Input {
+                id: sourceDirInput
+                labelText: "Source Directory:"
+                dialogTitle: "Select Source Directory"
+                selectDirectory: true
+                objectName: "sourceDirInput"
+                Layout.fillWidth: true
+                text: ""
+                placeholderText: "/home/{username}/Documents/source"
+            }
+
+            Form_File_Input {
+                id: targetDirInput
+                labelText: "Target Directory:"
+                dialogTitle: "Select Target Directory"
+                selectDirectory: true
+                objectName: "targetDirInput"
+                Layout.fillWidth: true
+                text: ""
+                placeholderText: "/home/{username}/Documents/target"
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Button_Primary {
+                    id: saveConfigButton
+                    objectName: "saveConfigButton"
+                    text: "Save Config"
+                    
+                    onClicked: {
+                        root.isSavingConfig = true
+                        configFileDialog.open()
+                    }
                 }
-
-                Label {
-                    text: "Target Username"
-                    color: "white"
-                    font.bold: true
-                }
-
-                TextField {
-                    id: usernameInput
-                    objectName:"usernameInput"
-                    Layout.fillWidth: true
-                    text: ""
-                }
-
-                Label {
-                    text: "Target Password"
-                    color: "white"
-                    font.bold: true
-                }
-
-                TextField {
-                    id: passwordInput
-                    objectName:"passwordInput"
-                    Layout.fillWidth: true
-                    echoMode: TextInput.Password
-                    text: ""
-                }
-
-                Label {
-                    text: "Private Key Directory:"
-                    color: "white"
-                    font.bold: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.topMargin: -5
-                    height: 40
-                    color: "transparent"
-                    border.color:"#CCCCCC"
-                    border.width: 1
-                    radius: 4
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        spacing: 8
-
-                        TextField {
-                            id: privateKeyDirInput
-                            objectName: "privateKeyDirInput"
-                            Layout.fillWidth: true
-                            text: ""
-                        }
-
-                        Button {
-                            id:privateKeyDirButton
-                            objectName: "privateKeyDirButton"
-                            text: "Browse"
-                            font.bold: true
-                            onClicked: console.log("Browse for Private Key Directory")
-
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
-                            background: Rectangle {
-                                color: "#2C3E50"
-                                radius: 4
-                            }
-                        }
+    
+                Button_Primary {
+                    id: loadConfigButton
+                    objectName: "loadConfigButton"
+                    text: "Load Config"
+                    
+                    onClicked: {
+                        root.isSavingConfig = false
+                        configFileDialog.open()
                     }
                 }
 
-                FileDialog {
-                    id: privateKeyFileDialog
-                    title: "Select Private Key Directory"
-                    onAccepted: {
-                        privateKeyDirInput.text = fileUrl.toLocalFile();
+                Button_Primary {
+                    id: clearConfigButton
+                    objectName: "clearConfigButton"
+                    text: "Clear Config"
+                    
+                    onClicked:{
+                         root.clearConfig();
                     }
                 }
 
-                CheckBox {
-                    id: ignoreHostKeyCheckbox
-                    objectName: "ignoreHostKeyCheckbox"
-                    text: "Ignore Host Key"
-                    font.bold: true
-                    checked: true
-                    contentItem: Text {
-                        text: parent.text
-                        font.bold: true
-                        color: "white"
-                        leftPadding: parent.indicator.width + parent.spacing
+                Button_Primary {
+                    id: uploadButton
+                    objectName: "uploadButton"
+                    text: "Upload"
+                    
+                    onClicked: {
+                        root.upload(
+                            hostInput.text,
+                            usernameInput.text,
+                            privateKeyDirInput.text,
+                            passwordInput.text,
+                            ignoreHostKeyCheckbox.checked,
+                            sourceDirInput.text,
+                            targetDirInput.text
+                        );
                     }
                 }
+            }
 
-                Label {
-                    text: "Source Directory:"
-                    color: "white"
-                    font.bold: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.topMargin: -5
-                    height: 40
-                    color: "transparent"
-                    border.width: 1
-                    border.color: "#CCCCCC"
-                    radius: 4
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        spacing: 8
-
-                        TextField {
-                            id: sourceDirInput
-                            objectName: "sourceDirInput"
-                            text: ""
-                            Layout.fillWidth: true
-                        }
-
-                        Button {
-                            id: sourceDirButton
-                            objectName: "sourceDirButton"
-                            text: "Browse"
-                            font.bold: true
-                            onClicked: console.log("Browse for Source Directory")
-
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
-                            background: Rectangle {
-                                color: "#2C3E50"
-                                radius: 4
-                            }
-                        }
-                    }
-                }
-
-                FileDialog {
-                    id: sourceDirFileDialog
-                    title: "Select Source Directory"
-                    onAccepted: {
-                        sourceDirInput.text = fileUrl.toLocalFile();
-                    }
-                }
-
-                Label {
-                    text: "Target Directory:"
-                    color: "white"
-                    font.bold: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.topMargin: -5
-                    height: 40
-                    color: "transparent"
-                    border.width: 1
-                    border.color: "#CCCCCC"
-                    radius: 4
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        spacing: 8
-
-                        TextField {
-                            id: targetDirInput
-                            objectName: "targetDirInput"
-                            Layout.fillWidth: true
-                            text: "/home/"
-                            placeholderText: "/home/"
-                        }
-
-                        Button {
-                            id: targetDirButton
-                            objectName: "targetDirButton"
-                            text: "Browse"
-                            font.bold: true
-
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
-                            background: Rectangle {
-                                color: "#2C3E50"
-                                radius: 4
-                            }
-                        }
-                    }
-                }
-
-                FileDialog {
-                    id: targetDirFileDialog
-                    title: "Select Target Directory"
-                    onAccepted: {
-                        targetDirInput.text = fileUrl.toLocalFile();
-                    }
-                }
-
-		RowLayout {
-		    Layout.alignment: Qt.AlignHCenter
-                    spacing: 8
-
-                    Button {
-                        id: saveConfigButton
-                        objectName: "saveConfigButton"
-                        text: "Save Config"
-                        font.bold: true
-                        onClicked: console.log("Save Config clicked")
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#2C3E50"
-                            radius: 4
-                        }
-                    }
-
-                    Button {
-                        id: loadConfigButton
-                        objectName: "loadConfigButton"
-                        text: "Load Config"
-                        font.bold: true
-                        onClicked: console.log("Load Config clicked")
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#2C3E50"
-                            radius: 4
-                        }
-                    }
-
-                    Button {
-                        id: clearConfigButton
-                        objectName: "clearConfigButton"
-                        text: "Clear Config"
-                        font.bold: true
-                        onClicked: console.log("Clear Config clicked")
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#2C3E50"
-                            radius: 4
-                        }
-                    }
-
-                    Button {
-                        id: uploadButton
-                        objectName: "uploadButton"
-                        text: "Upload"
-                        font.bold: true
-                        onClicked: console.log("Upload clicked")
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#2C3E50"
-                            radius: 4
-                        }
-                    }
-                }
-
-                FileDialog {
-                    id: configFileDialog
-                    title: "Select Configuration File"
-                    onAccepted: {
-                        if (saveConfigButton.down) {
-                            saveConfig(
+            FileDialog {
+                id: configFileDialog
+                title: "Select Configuration File"
+                fileMode: FileDialog.OpenFile
+                onAccepted: {
+                    if (configFileDialog.file) {
+                        // Convert QUrl to local file path
+                        var fileUrl = configFileDialog.file.toString()
+                        var filePath = fileUrl.replace(/^(file:\/{2,3})/, "")
+                        filePath = decodeURIComponent(filePath)
+                        
+                        if (root.isSavingConfig) {
+                            root.saveConfig(
                                 hostInput.text,
                                 usernameInput.text,
                                 privateKeyDirInput.text,
                                 targetDirInput.text,
                                 ignoreHostKeyCheckbox.checked,
                                 sourceDirInput.text,
-                                fileUrl.toLocalFile()
+                                filePath
                             );
                         } else {
-                            loadConfig(fileUrl.toLocalFile());
+                            root.loadConfig(filePath);
                         }
                     }
                 }
